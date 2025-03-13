@@ -19,6 +19,7 @@ async function main() {
 
   // collector
   ws = new BitgetWebSocketCollector(db, bucket, organization);
+  ws.addSymbols(symbols);
   ws.start();
   api = new BitgetApiCollector(db, bucket, organization);
   api.addSymbols(symbols);

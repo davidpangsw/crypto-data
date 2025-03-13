@@ -18,11 +18,16 @@ export class BitgetWebSocketCollector {
   private ws: BitgetWebSocket;
   private spotRepo: SpotRepository;
   private futureRepo: FutureRepository;
+  private symbols : string[] = [];
 
   constructor(db: InfluxDB, bucket_prefix: string, org: string) {
     this.ws = new BitgetWebSocket();
     this.spotRepo = new SpotRepository(db, `${bucket_prefix}_spot`, org);
     this.futureRepo = new FutureRepository(db, `${bucket_prefix}_future`, org);
+  }
+
+  public addSymbols(symbols: string[]) {
+    this.symbols.push(...symbols);
   }
 
   public addSubscriptions(subscriptions: SubscribeArgument[]) {
