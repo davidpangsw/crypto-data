@@ -1,26 +1,33 @@
-import winston from 'winston';
+import winston, { format, createLogger, transports } from 'winston';
 import { loggingConfig } from '../config/logging';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 // Create a custom logger with different transports
-const logger = winston.createLogger({
+const logger = createLogger({
   level: 'info', // Set the default log level
-  format: winston.format.combine(
-    winston.format.colorize(), // Colorize the logs in the console
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), // Add timestamp to logs
-    winston.format.printf(({ timestamp, level, message }) => {
+  format: format.combine(
+    format.colorize(), // Colorize the logs in the console
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), // Add timestamp to logs
+    format.printf(({ timestamp, level, message }) => {
       return `${timestamp} [${level}]: ${message}`;
     })
   ),
   transports: [
     // Console transport
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
+    new transports.Console({
+      format: format.combine(
+        format.colorize(),
+        format.simple()
       ),
     }),
-    // File transport
-    new winston.transports.File({ filename: loggingConfig.logfile }),
+    // Rotating file transport
+    new DailyRotateFile({
+      filename: 'logs/application-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true, // Compress old log files
+      maxSize: '20m', // Maximum size of log file (20MB)
+      maxFiles: '14d' // Keep logs for 14 days
+    })
   ],
 });
 
