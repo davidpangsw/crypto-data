@@ -1,10 +1,16 @@
-import { z, ZodObject, ZodTypeAny } from "zod";
+import { z, ZodObject, ZodRawShape, ZodSchema, ZodType, ZodTypeAny } from "zod";
 import { InstType } from "../model/instrument";
 
 export class ZodBuilder {
-  private schema; // do not set type to avoid typescript error
-  public constructor(schema = z.object({})) {
+  private schema: ZodObject<any>;
+  private refinements: Array<(schema: ZodTypeAny) => ZodTypeAny> = []; // Store refinements
+
+  constructor(schema = z.object({})) {
     this.schema = schema;
+  }
+  private extend(obj: any) {
+    this.schema = this.schema.extend(obj);
+    return this;
   }
   private arg(obj: Record<string, ZodTypeAny>) {
     let arg = this.schema.shape.arg;
@@ -12,37 +18,34 @@ export class ZodBuilder {
       arg = z.object({});
     }
     arg = arg.extend(obj);
-    this.schema = this.schema.extend({ arg });
+    return this.extend({arg});
+  }
+
+  action(s: string) {
+    return this.extend({ action: z.literal(s) });
+  }
+  event(s: string) {
+    return this.extend({ event: z.literal(s) });
+  }
+
+  undefined(key: string) {
+    this.refinements.push( (schema) => 
+      schema.refine(
+        (data) => !(key in data), 
+        { message: `${key} must not exist`, path: [key] }
+      )
+    );
     return this;
   }
 
-  public action(s: string) {
-    this.schema = this.schema.extend({ action: z.literal(s) });
-    return this;
-  }
-  public event(s: string) {
-    this.schema = this.schema.extend({ event: z.literal(s) });
-    return this;
-  }
+  instType(s: InstType) { return this.arg({ instType: z.literal(s) }); }
+  channel(values: string[]) { return this.arg({ channel: z.enum(values as [string, ...string[]]) }); }
 
-  public undefined(key: string) {
-    this.schema = this.schema.refine((data) => !(key in data), { message: `${key} must not exist`, path: [key] });
-    return this;
-  }
-
-  public instType(s: InstType) {
-    return this.arg({
-      instType: z.literal(s)
-    });
-  }
-  public channel(values: string[]) {
-    return this.arg({
-      channel: z.enum(values as [string, ...string[]])
-    });
-  }
-
-  public build() {
-    return this.schema;
+  build() : ZodTypeAny { 
+    return this.refinements.reduce(
+      (prev, item) => item(prev),
+      this.schema as ZodTypeAny
+    );
   }
 }
 

@@ -1,0 +1,3 @@
+sudo influxd &  
+
+# influx ping

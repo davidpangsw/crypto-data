@@ -6,7 +6,8 @@ import { BitgetApiCollector } from './bitget/bitget_api_collector';
 import { bitgetConfig } from './config/bitget';
 import { influxConfig } from './config/influx';
 
-let ws, api;
+let ws: BitgetWebSocketCollector;
+let api: BitgetApiCollector;
 
 async function main() {
   const db = connect(influxConfig.url, influxConfig.token);

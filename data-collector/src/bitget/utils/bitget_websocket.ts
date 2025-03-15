@@ -15,7 +15,7 @@ export interface SubscribeArgument {
 export class BitgetWebSocket {
   private args: SubscribeArgument[] = [];
   private pingInterval: number;
-  private pongReceived: boolean;
+  private pongReceived: boolean = true;
   private ws: ReconnectingWebSocket;
 
   constructor(url: string = 'wss://ws.bitget.com/v2/ws/public') {

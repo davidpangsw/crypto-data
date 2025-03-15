@@ -10,13 +10,16 @@ export class Repository {
     this.db = db;
     this.bucket = bucket;
     this.org = org;
+    this.writeApi = this.db.getWriteApi(this.org, this.bucket, 'ms', {
+      flushInterval: 1000, // Flush every second
+    });
   }
 
   //   No schema creation is needed in InfluxDB
   async init(): Promise<void> {
-    this.writeApi = this.db.getWriteApi(this.org, this.bucket, 'ms', {
-      flushInterval: 1000, // Flush every second
-    });
+    // this.writeApi = this.db.getWriteApi(this.org, this.bucket, 'ms', {
+    //   flushInterval: 1000, // Flush every second
+    // });
   }
 
   async savePoint(point: Point): Promise<void> {
