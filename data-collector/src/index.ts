@@ -14,15 +14,15 @@ async function main() {
   const {
     collector: {
       symbols,
-      influx: { bucket, organization }
+      influx: { bucketPrefix, organization }
     }
   } = bitgetConfig;
 
   // collector
-  ws = new BitgetWebSocketCollector(db, bucket, organization);
+  ws = new BitgetWebSocketCollector(db, bucketPrefix, organization);
   ws.addSymbols(symbols);
   ws.start();
-  api = new BitgetApiCollector(db, bucket, organization);
+  api = new BitgetApiCollector(db, bucketPrefix, organization);
   api.addSymbols(symbols);
   api.start();
 

@@ -20,10 +20,10 @@ export class BitgetWebSocketCollector {
   private futureRepo: FutureRepository;
   private symbols : string[] = [];
 
-  constructor(db: InfluxDB, bucket_prefix: string, org: string) {
+  constructor(db: InfluxDB, bucketPrefix: string, org: string) {
     this.ws = new BitgetWebSocket();
-    this.spotRepo = new SpotRepository(db, `${bucket_prefix}_spot`, org);
-    this.futureRepo = new FutureRepository(db, `${bucket_prefix}_future`, org);
+    this.spotRepo = new SpotRepository(db, `${bucketPrefix}_spot`, org);
+    this.futureRepo = new FutureRepository(db, `${bucketPrefix}_future`, org);
   }
 
   public addSymbols(symbols: string[]) {

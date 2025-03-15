@@ -1,7 +1,7 @@
 export const bitgetConfig = {
   collector: {
     influx: {
-      bucket: "temp",
+      bucketPrefix: "bitget",
       organization: "organization",
     },
     symbols: ['ALTUSDT', 'FARTCOINUSDT', 'ALCHUSDT'],

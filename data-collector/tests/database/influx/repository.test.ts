@@ -6,7 +6,7 @@ import { connectDefault } from '../../../src/database/influx/connection';
 
 // Configuration - adjust these to match your local setup
 const INFLUX_ORG = 'organization';
-const INFLUX_BUCKET = 'test-bucket'; // Use a test-specific bucket
+const INFLUX_BUCKET = 'temp'; // Use a test-specific bucket
 
 describe('Repository', () => {
   let influxDB: InfluxDB;
