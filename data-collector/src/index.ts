@@ -17,24 +17,24 @@ async function main() {
   const db = connect(influxConfig.url, influxConfig.token);
   const {
     collector: {
-      symbols,
-      influx: { bucketPrefix, organization }
+      influx: { bucketPrefix, organization },
+      ws: wsConfig,
+      api: apiConfig,
     }
   } = bitgetConfig;
 
-  // collector
+  // repo
   futureRepo = new FutureRepository(db, `${bucketPrefix}_future`, organization);
   spotRepo = new SpotRepository(db, `${bucketPrefix}_spot`, organization);
   await futureRepo.init();
   await spotRepo.init();
+
+  // collector
   ws = new BitgetWebSocketCollector(
     {
       futureRepo,
       spotRepo,
-
-      instIds: symbols,
-      futureChannels: ["books5", "ticker"],
-      spotChannels: ["ticker"],
+      ...wsConfig,
     }
   );
   ws.start();
@@ -42,11 +42,7 @@ async function main() {
     {
       futureRepo,
       spotRepo,
-
-      symbols,
-      futureGranularity: "15m",
-      spotGranularity: "15min",
-      sleepMs: 15 * 60 * 1000,
+      ...apiConfig,
     }
   );
   api.start();
