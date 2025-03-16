@@ -1,52 +1,55 @@
 import { InfluxDB } from "@influxdata/influxdb-client";
-import { FutureRepository } from "./repository/future_repository";
-import { SpotRepository } from "./repository/spot_repository";
-import logger from "../utils/logger";
-import { ApiClient } from "../utils/api_client";
-import { future, spot } from "./api/facade";
-import { sleep } from "../utils/async";
+import logger from "@/utils/logger";
+import { sleep } from "@/utils/async";
+import { ApiClient } from "@/utils/api_client";
+import { FutureRepository } from "./future/repository/future_repository";
+import { SpotRepository } from "./spot/repository/spot_repository";
+import { future, spot } from "./facade";
+import { Granularity as FutureGranularity } from "./future/model/candlestick";
+import { Granularity as SpotGranularity } from "./spot/model/candlestick";
+
+interface BitgetApiCollectorConfig {
+  futureRepo: FutureRepository;
+  spotRepo: SpotRepository;
+
+  symbols: string[],
+  futureGranularity: FutureGranularity;
+  spotGranularity: SpotGranularity;
+  sleepMs: number;
+}
 
 export class BitgetApiCollector {
-  private spotRepo: SpotRepository;
-  private futureRepo: FutureRepository;
   private client: ApiClient;
-  private symbols: string[] = [];
+  private config: BitgetApiCollectorConfig;
 
-  constructor(db: InfluxDB, bucketPrefix: string, org: string) {
+  constructor(config: BitgetApiCollectorConfig) {
+    this.config = config;
     this.client = new ApiClient();
-    this.spotRepo = new SpotRepository(db, `${bucketPrefix}_spot`, org);
-    this.futureRepo = new FutureRepository(db, `${bucketPrefix}_future`, org);
-  }
-
-  public addSymbols(symbols: string[]) {
-    this.symbols.push(...symbols);
   }
 
   public async start() {
-    // const granularity = '15m';
-    const sleepMs = 15 * 60 * 1000;
-    await this.spotRepo.init();
-    await this.futureRepo.init();
+    const { symbols, futureGranularity, spotGranularity, sleepMs } = this.config;
 
-    if (this.symbols.length == 0) {
+    if (symbols.length == 0) {
       logger.warn("No symbols assigned");
       return;
     }
     while (true) {
-
-      for (const symbol of this.symbols) {
-        this.collectFutureCandlestick(symbol, "15m");
-        this.collectFutureMarkPriceCandlestick(symbol, "15m");
-        this.collectSpotCandlestick(symbol, "15min");
+      for (const symbol of symbols) {
+        this.collectFutureCandlestick(symbol, futureGranularity);
+        this.collectFutureMarkPriceCandlestick(symbol, futureGranularity);
+        this.collectSpotCandlestick(symbol, spotGranularity);
         this.collectFundingRate(symbol);
       }
       await sleep(sleepMs);
     }
   }
 
-  private async collectFutureCandlestick(symbol: string, granularity: string) {
+  private async collectFutureCandlestick(symbol: string, granularity: FutureGranularity) {
+    const { futureRepo } = this.config;
+
     // update future candlesticks
-    this.futureRepo.saveCandlesticks(
+    futureRepo.saveCandlesticks(
       { symbol, granularity },
       await future.market.getHistoricalCandlestick(this.client, {
         symbol,
@@ -58,9 +61,11 @@ export class BitgetApiCollector {
     );
   }
 
-  private async collectFutureMarkPriceCandlestick(symbol: string, granularity: string) {
+  private async collectFutureMarkPriceCandlestick(symbol: string, granularity: FutureGranularity) {
+    const { futureRepo } = this.config;
+
     // update future candlesticks
-    this.futureRepo.saveMarkPriceCandlesticks(
+    futureRepo.saveMarkPriceCandlesticks(
       { symbol, granularity },
       await future.market.getHistoricalMarkPriceCandlestick(this.client, {
         symbol,
@@ -72,9 +77,11 @@ export class BitgetApiCollector {
     );
   }
 
-  private async collectSpotCandlestick(symbol: string, granularity: string) {
+  private async collectSpotCandlestick(symbol: string, granularity: SpotGranularity) {
+    const { spotRepo } = this.config;
+
     // update spot candlesticks
-    this.spotRepo.saveCandlesticks(
+    spotRepo.saveCandlesticks(
       { symbol, granularity },
       await spot.market.getHistoricalCandlestick(this.client, {
         symbol,
@@ -86,6 +93,8 @@ export class BitgetApiCollector {
   }
 
   private async collectFundingRate(symbol: string) {
+    const { futureRepo } = this.config;
+
     // update funding rates
     const fundingRates = await future.market.getHistoricalFundingRate(this.client, {
       symbol,
@@ -94,7 +103,7 @@ export class BitgetApiCollector {
       pageNo: '0',
     });
     for (const r of fundingRates) {
-      this.futureRepo.saveFundingRate(r)
+      futureRepo.saveFundingRate(r)
       // logger.info(JSON.stringify(r));
     }
 
@@ -102,8 +111,6 @@ export class BitgetApiCollector {
 
   public async close() {
     logger.info("Closing Collector...")
-    await this.spotRepo.close();
-    await this.futureRepo.close();
 
     logger.info("Closed")
   }

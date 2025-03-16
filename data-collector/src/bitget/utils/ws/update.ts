@@ -1,8 +1,8 @@
-import { FutureDepthData } from "./future/depth";
-import { InstType } from "./instrument";
-import { FutureTickerData } from "./future/ticker";
-import { SpotTickerData } from "./spot/ticker";
+import { FutureDepthData } from "../../future/model/depth";
+import { FutureTickerData } from "../../future/model/ticker";
+import { SpotTickerData } from "../../spot/model/ticker";
 
+export type InstType = 'SPOT' | 'USDT-FUTURES';
 export interface ChannelUpdate {
   event: string,
   action?: string,

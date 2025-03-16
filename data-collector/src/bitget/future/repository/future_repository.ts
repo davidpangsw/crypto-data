@@ -1,14 +1,14 @@
 import { Point } from "@influxdata/influxdb-client";
-import { FutureDepthData, FutureDepthDataItem } from "../model/future/depth";
-import { ChannelUpdate, ChannelUpdateArgument } from "../model/update";
-import { Repository } from '../../database/influx/repository';
-import { FutureTickerData, FutureTickerDataItem } from "../model/future/ticker";
-import logger from "../../utils/logger";
-import { HistoricalMarkPriceCandlestick } from "../api/future/market";
+import logger from "@/utils/logger";
+import { Repository } from '@/database/influx/repository';
+import { FutureDepthData, FutureDepthDataItem } from "../model/depth";
+import { ChannelUpdate, ChannelUpdateArgument } from "../../utils/ws/update";
+import { FutureTickerData, FutureTickerDataItem } from "../model/ticker";
+import { Granularity } from "../model/candlestick";
 
 interface CandlestickMetaData {
   symbol: string;
-  granularity: string;
+  granularity: Granularity;
 }
 // interface Candlestick {
 //   timestamp: string;

@@ -1,9 +1,8 @@
 // import WebSocket from 'ws';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import WS from 'ws';
-import { InstType } from '../model/instrument';
-import { ChannelUpdate } from '../model/update';
-import logger from '../../utils/logger';
+import logger from '@/utils/logger';
+import { InstType, ChannelUpdate } from './update';
 
 
 export interface SubscribeArgument {

@@ -1,1 +1,0 @@
-export type InstType = 'SPOT' | 'USDT-FUTURES';

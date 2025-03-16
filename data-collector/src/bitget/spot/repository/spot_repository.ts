@@ -1,8 +1,8 @@
 import { Point } from "@influxdata/influxdb-client";
-import { Repository } from "../../database/influx/repository";
-import { ChannelUpdate, ChannelUpdateArgument } from "../model/update";
-import { SpotTickerData, SpotTickerDataItem } from "../model/spot/ticker";
-import logger from "../../utils/logger";
+import logger from "@/utils/logger";
+import { Repository } from "@/database/influx/repository";
+import { ChannelUpdate, ChannelUpdateArgument } from "../../utils/ws/update";
+import { SpotTickerData, SpotTickerDataItem } from "../model/ticker";
 
 interface CandlestickMetaData {
   symbol: string;

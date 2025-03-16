@@ -5,7 +5,10 @@
     "esModuleInterop": true, // Ensures ES imports work with CommonJS
     "strict": true,
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "paths": {
+      "@/*": ["./src/*"] // This means '@' maps to the 'src' folder
+    }
   },
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]

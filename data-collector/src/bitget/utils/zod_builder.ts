@@ -1,5 +1,4 @@
-import { z, ZodObject, ZodRawShape, ZodSchema, ZodType, ZodTypeAny } from "zod";
-import { InstType } from "../model/instrument";
+import { z, ZodObject, ZodTypeAny } from "zod";
 
 export class ZodBuilder {
   private schema: ZodObject<any>;
@@ -38,7 +37,7 @@ export class ZodBuilder {
     return this;
   }
 
-  instType(s: InstType) { return this.arg({ instType: z.literal(s) }); }
+  instType(s: string) { return this.arg({ instType: z.literal(s) }); }
   channel(values: string[]) { return this.arg({ channel: z.enum(values as [string, ...string[]]) }); }
 
   build() : ZodTypeAny { 

@@ -1,4 +1,4 @@
-import { ApiClient } from "../../utils/api_client";
+import { ApiClient } from "@/utils/api_client";
 
 // utility function for building api
 export function api<T, R>(method: string, endpoint: string) {

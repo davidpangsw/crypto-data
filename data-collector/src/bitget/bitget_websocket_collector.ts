@@ -1,10 +1,10 @@
 import { InfluxDB } from "@influxdata/influxdb-client";
-import { ChannelUpdate } from "./model/update";
-import { SubscribeArgument, BitgetWebSocket } from "./utils/bitget_websocket";
-import { FutureRepository } from "./repository/future_repository";
-import { SpotRepository } from "./repository/spot_repository";
+import { ChannelUpdate } from "./utils/ws/update";
+import { BitgetWebSocket } from "./utils/ws/websocket";
+import { FutureRepository } from "./future/repository/future_repository";
+import { SpotRepository } from "./spot/repository/spot_repository";
 import { builder as zb } from "./utils/zod_builder";
-import logger from "../utils/logger";
+import logger from "@/utils/logger";
 
 const SubscribeResponseSchema = zb().event('subscribe').build();
 const SubscribeSuccessResponse = zb().event('subscribe').undefined('code').build();
@@ -13,55 +13,61 @@ const SnapshotFutureDepthSchema = zb().action('snapshot').instType('USDT-FUTURES
 const UpdateFutureDepthSchema = zb().action('update').instType('USDT-FUTURES').channel(['books']).build();
 const SnapshotSpotTickerSchema = zb().action('snapshot').instType('SPOT').channel(['ticker']).build();
 
+interface BitgetWebSocketCollectorConfig {
+  futureRepo: FutureRepository;
+  spotRepo: SpotRepository;
+
+  instIds: string[],
+  futureChannels: string[],
+  spotChannels: string[],
+}
 
 export class BitgetWebSocketCollector {
+  private config: BitgetWebSocketCollectorConfig;
   private ws: BitgetWebSocket;
-  private spotRepo: SpotRepository;
-  private futureRepo: FutureRepository;
-  private symbols : string[] = [];
+  private instIds: string[] = [];
 
-  constructor(db: InfluxDB, bucketPrefix: string, org: string) {
+  constructor(config: BitgetWebSocketCollectorConfig) {
+    this.config = config;
     this.ws = new BitgetWebSocket();
-    this.spotRepo = new SpotRepository(db, `${bucketPrefix}_spot`, org);
-    this.futureRepo = new FutureRepository(db, `${bucketPrefix}_future`, org);
   }
 
-  public addSymbols(symbols: string[]) {
-    this.symbols.push(...symbols);
-  }
-
-  public addSubscriptions(subscriptions: SubscribeArgument[]) {
-    this.ws.addSubscriptions(subscriptions);
+  public addInstIds(instIds: string[]) {
+    this.instIds.push(...instIds);
   }
 
   public async start() {
-    for (const instId of this.symbols) {
-      this.addSubscriptions([
-        { instType: "USDT-FUTURES", channel: "books5", instId, },
-        { instType: "USDT-FUTURES", channel: "ticker", instId, },
-        { instType: "SPOT", channel: "ticker", instId },
-      ]);
+    for (const instId of this.instIds) {
+      for (const channel of this.config.futureChannels) {
+        this.ws.addSubscriptions([
+          { instType: "USDT-FUTURES", channel, instId, },
+        ]);
+      }
+      for (const channel of this.config.spotChannels) {
+        this.ws.addSubscriptions([
+          { instType: "SPOT", channel, instId, },
+        ]);
+      }
     }
-    await this.spotRepo.init();
-    await this.futureRepo.init();
-    this.ws.connect((update) => this.handle(update));
+    this.ws.connect((update: ChannelUpdate) => this.handle(update));
   }
 
   private async handle(update: ChannelUpdate) {
     const { event, action, arg, data } = update;
+    const { futureRepo, spotRepo } = this.config;
 
     // Handle subscribe success
     if (SubscribeSuccessResponse.safeParse(update).success) {
       logger.info("Subscribe success", arg);
       return;
     } else if (SnapshotFutureDepthSchema.safeParse(update).success) {
-      this.futureRepo.saveDepthSnapshot(update)
+      futureRepo.saveDepthSnapshot(update)
       // } else if (UpdateFutureDepthSchema.safeParse(update).success) { // "books" channel only
       //   this.futureRepo.saveDepthUpdate(update);
     } else if (SnapshotFutureTickerSchema.safeParse(update).success) {
-      this.futureRepo.saveTickerSnapshot(update);
+      futureRepo.saveTickerSnapshot(update);
     } else if (SnapshotSpotTickerSchema.safeParse(update).success) {
-      this.spotRepo.saveTickerSnapshot(update)
+      spotRepo.saveTickerSnapshot(update)
     } else {
       logger.warn("Unhandled update: ", update);
     }
@@ -71,8 +77,6 @@ export class BitgetWebSocketCollector {
   public async close() {
     logger.info("Closing Collector...")
     this.ws.close();
-    await this.spotRepo.close();
-    await this.futureRepo.close();
 
     logger.info("Closed")
   }

@@ -1,5 +1,3 @@
-import { ChannelData } from "../update";
-
 /**
  * Ticker (Market)
  */
