@@ -1,4 +1,3 @@
-import { InfluxDB } from "@influxdata/influxdb-client";
 import logger from "@/utils/logger";
 import { sleep } from "@/utils/async";
 import { ApiClient } from "@/utils/api_client";
@@ -110,9 +109,8 @@ export class BitgetApiCollector {
   }
 
   public async close() {
-    logger.info("Closing Collector...")
-
-    logger.info("Closed")
+    // logger.info("Closing Collector...")
+    // logger.info("Closed")
   }
 
 }

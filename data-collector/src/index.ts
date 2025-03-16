@@ -13,7 +13,6 @@ let api: BitgetApiCollector;
 let futureRepo: FutureRepository;
 let spotRepo: SpotRepository;
 
-
 async function main() {
   const db = connect(influxConfig.url, influxConfig.token);
   const {
@@ -63,8 +62,8 @@ process.on('SIGINT', async () => {
   try {
     if (ws) { await ws.close(); }
     if (api) { await api.close(); }
-    if (spotRepo) { await spotRepo.close(); }
     if (futureRepo) { await futureRepo.close(); }
+    if (spotRepo) { await spotRepo.close(); }
   } catch (err) {
     console.error("Error during collector shutdown:", err);
   }

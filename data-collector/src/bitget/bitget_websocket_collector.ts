@@ -1,10 +1,9 @@
-import { InfluxDB } from "@influxdata/influxdb-client";
+import logger from "@/utils/logger";
 import { ChannelUpdate } from "./utils/ws/update";
 import { BitgetWebSocket } from "./utils/ws/websocket";
 import { FutureRepository } from "./future/repository/future_repository";
 import { SpotRepository } from "./spot/repository/spot_repository";
 import { builder as zb } from "./utils/zod_builder";
-import logger from "@/utils/logger";
 
 const SubscribeResponseSchema = zb().event('subscribe').build();
 const SubscribeSuccessResponse = zb().event('subscribe').undefined('code').build();
@@ -25,25 +24,21 @@ interface BitgetWebSocketCollectorConfig {
 export class BitgetWebSocketCollector {
   private config: BitgetWebSocketCollectorConfig;
   private ws: BitgetWebSocket;
-  private instIds: string[] = [];
 
   constructor(config: BitgetWebSocketCollectorConfig) {
     this.config = config;
     this.ws = new BitgetWebSocket();
   }
 
-  public addInstIds(instIds: string[]) {
-    this.instIds.push(...instIds);
-  }
-
   public async start() {
-    for (const instId of this.instIds) {
-      for (const channel of this.config.futureChannels) {
+    const {instIds, futureChannels, spotChannels} = this.config;
+    for (const instId of instIds) {
+      for (const channel of futureChannels) {
         this.ws.addSubscriptions([
           { instType: "USDT-FUTURES", channel, instId, },
         ]);
       }
-      for (const channel of this.config.spotChannels) {
+      for (const channel of spotChannels) {
         this.ws.addSubscriptions([
           { instType: "SPOT", channel, instId, },
         ]);
@@ -75,9 +70,8 @@ export class BitgetWebSocketCollector {
 
 
   public async close() {
-    logger.info("Closing Collector...")
+    logger.info("Closing BitgetWebSocketCollector...")
     this.ws.close();
-
     logger.info("Closed")
   }
 
