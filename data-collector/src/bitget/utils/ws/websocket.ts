@@ -62,7 +62,7 @@ export class BitgetWebSocket {
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      logger.error('WebSocket error:', error);
     };
 
     ws.onclose = (event) => {
@@ -70,7 +70,7 @@ export class BitgetWebSocket {
       if (event.code === 1000) {
         logger.info('Connection closed normally');
       } else {
-        console.error('Connection closed abnormally');
+        logger.error('Connection closed abnormally');
       }
     };
   }
