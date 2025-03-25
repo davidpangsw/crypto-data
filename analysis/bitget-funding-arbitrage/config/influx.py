@@ -7,10 +7,7 @@ import os
 # Load the .env file
 load_dotenv()
 
-# Access environment variables
-my_variable = os.getenv("MY_VARIABLE")
-print(my_variable)
-
-# Example with a default value if variable isn't found
-database_url = os.getenv("DATABASE_URL", "default_url_here")
-print(database_url)
+# url = "http://35.223.47.48:8086"
+INFLUX_URL = os.getenv("INFLUX_URL")
+INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")
+INFLUX_ORG = "organization"

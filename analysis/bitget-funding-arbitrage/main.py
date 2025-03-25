@@ -1,12 +1,27 @@
 from decimal import Decimal
+import os
 import traceback
 from influxdb_client import InfluxDBClient
 import numpy as np
 import pandas as pd
 from utils.math import to_decimal
 from repository.repository import Repository
-from config.influx import token
+from config.influx import INFLUX_URL, INFLUX_TOKEN, INFLUX_ORG
 from config.data import data_dir
+import logging 
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO)
+
+# Create a logger
+logger = logging.getLogger(__name__)  # __name__ gives the module name
+
+# Log some messages
+logger.debug("This is a debug message")    # Won't show unless level is DEBUG
+logger.info("This is an info message")
+logger.warning("This is a warning message")
+logger.error("This is an error message")
+logger.critical("This is a critical message")
 
 def inspect(value):
     print(value, type(value))
@@ -16,20 +31,23 @@ trading_fee = Decimal('0.0256') / Decimal('100') # best tier taker in Bitget
 
 
 # Connection parameters
-# url = "http://localhost:8086"
-url = "http://35.223.47.48:8086"
-org = "organization"
-bucket_prefix = "temp"
 
 # Initialize the client
-client = InfluxDBClient(url=url, token=token, org=org)
-
+symbol = "ALTUSDT"
+bucket_prefix = "bitget"
+client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 repo = Repository(client, bucket_prefix)
 
 
 def analyse(symbol, start, end):
-    # df = repo.query_merged_ticker(symbol, start, end)
-    df = pd.read_csv(data_dir / 'merge.csv')
+    logger.info("analyse", symbol, start, end)
+
+    if os.path.exists(data_dir / "merge.csv"):
+        logger.info("reading data...")
+        df = pd.read_csv(data_dir / 'merge.csv')
+    else:
+        logger.info("fetching data...")
+        df = repo.query_merged_ticker(symbol, start, end)
 
     # Drop only the leading rows where 'lastPr_spot' is NaN
     df = df[df['lastPr_spot'].notna() | (df.index >= df['lastPr_spot'].first_valid_index())]
@@ -100,6 +118,7 @@ def analyse(symbol, start, end):
     # df.reset_index(drop=True, inplace=True)
 
     # output
+    logger.info("outputting data...")
     # df.to_csv(data_dir / "result.csv", index=False)
     # dfbasis'] = pd.to_numeric(df['basis'], errors='coerce')
     # df['_time'] = df['_time'].dt.tz_localize(None)
@@ -117,8 +136,7 @@ def analyse_candlestick(symbol, start, end):
     df.to_csv(data_dir / "result.csv", index=False)
 
 try:
-    symbol = "ALTUSDT"
-    analyse(symbol, "-16h", "0h")
+    analyse(symbol, "-176h", "-128h")
     # analyse(symbol, "-36h", "0h")
 except Exception as e:
     print(f"Error occurred: {e}")
