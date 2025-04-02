@@ -122,12 +122,9 @@ class Repository:
         return df[['_time', 'fundingRate']]
 
     def query_merged_candlestick(self, symbol, start, stop, cachefile="merge.csv"):
-        future = save(self.query_future_candlestick(
-            symbol, start, stop, "15m"), "future.csv")
-        future_mark_price = save(self.query_future_mark_price_candlestick(
-            symbol, start, stop, "15m"), "future_mark_price.csv")
-        spot = save(self.query_spot_candlestick(
-            symbol, start, stop, "15min"), "spot.csv")
+        future = save(self.query_future_candlestick(symbol, start, stop, "15m"), "future.csv")
+        future_mark_price = save(self.query_future_mark_price_candlestick(symbol, start, stop, "15m"), "future_mark_price.csv")
+        spot = save(self.query_spot_candlestick(symbol, start, stop, "15min"), "spot.csv")
         # funding = save(self.query_funding_rate(symbol, start, stop), "funding.csv")
 
         # # Merge with nearest timestamp
@@ -199,9 +196,9 @@ class Repository:
 
             # fetch data
             symbol = instId
-            future = save(self.query_future_ticker(instId, start, stop), "future.csv")
-            spot = save(self.query_spot_ticker(instId, start, stop), "spot.csv")
-            funding = save(self.query_funding_rate(symbol, start, stop), "funding.csv")
+            future = save(self.query_future_ticker(instId, start, stop), f"{instId}/future.csv")
+            spot = save(self.query_spot_ticker(instId, start, stop), f"{instId}/spot.csv")
+            funding = save(self.query_funding_rate(symbol, start, stop), f"{instId}/funding.csv")
 
             # Merge with nearest timestamp
             df = pd.merge_asof(future, funding, on='_time',
